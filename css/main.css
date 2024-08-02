@@ -1,0 +1,145 @@
+
+
+body{
+    margin:0;
+    background-color:black;
+    color: white;
+}
+h1,h2,h3,h4,h5,h6{
+    font-family: Arial, sans-serif;
+}
+/* REMOVE THE ARROW FROM THE INPUT NUMBER */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+h1{
+    display:flex;
+    justify-content:center;
+    align-self:center;
+    font-weight:bold;
+    font-size:42px;
+    border-bottom: yellow 2px solid;
+}
+
+
+.container{
+    display: flex;
+    justify-content: center;
+    max-width:500px;
+}
+
+.curr-currency{
+    margin-bottom: 0;
+}
+.select-currency{
+    margin-bottom: 0;
+}
+.date-currency{
+    margin-bottom: 0;
+}
+
+.calc-currency{
+    margin: 0 5px;
+    display: flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction: column;
+}
+.calc-currency .calculator{
+    display: flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction: column;
+}
+.calc-currency .calculator .calculator-container{
+    display: flex;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 14px;
+    color: #1a73e8;
+    padding: 1px;
+    border: 1px solid #202124;
+    position: relative;
+}
+.calc-currency .calculator .calculator-container:hover {
+    border: 1px solid #dadce0;
+}
+.calc-currency .calculator .calculator-container .input-border {
+    position: absolute;
+    top: 15%;
+    bottom: 15%;
+    right: 65%;
+    background-color: #dadce0;
+    width: 1px;
+}
+
+.calc-currency .calculator select{
+    outline: none;
+    line-height: 24px;
+    appearance: none;
+    font-size: 1.15rem;
+    padding: 0.675em 6em 0.675em 1em;
+    background-color: #fff;
+    cursor: pointer;
+    margin: 0;
+    border: 0;
+}
+
+
+.calc-currency .calculator input{
+    margin: 0;
+    outline: none;
+    line-height: 24px;
+    font-size: 1.15rem;
+    padding: 0.675em 6em 0.675em 1em;
+    cursor: pointer;
+    text-align: left;
+    padding: 1px 12px 1px 6px;
+    border: 0;
+}
+
+
+/* example ****************************************************************/
+/* .custom-select {
+    min-width: 350px;
+  }
+  
+  .custom-select select {
+    appearance: none;
+    width: 100%;
+    font-size: 1.15rem;
+    padding: 0.675em 6em 0.675em 1em;
+    background-color: #fff;
+    border: 1px solid #caced1;
+    border-radius: 0.25rem;
+    color: #000;
+    cursor: pointer;
+  } */
+   /* **************************** */
+
+.calc-stats{
+    margin: 0 5px;
+    
+}
+
+/* helper */
+.container{
+    display: flex;
+    justify-content: center;
+    /* max-width:500px; */
+    max-width: 60vw;
+    margin: 0 auto;
+}
+
+.flex{
+    display: flex;
+}
+.align-center{
+    align-items: center;
+}
+.justify-center{
+    justify-content: center;
+}

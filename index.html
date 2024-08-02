@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/main.css">
+
+</head>
+
+<body>
+
+    <h1>Currency calculator</h1>
+    <main>
+        <section class="continer flex align-center justify-center">
+            <div class="calc-stats">
+
+                sttticc hereeee
+            </div>
+            <div class="calc-currency">
+
+                <div class="curr-currency">
+                    <span>1</span>
+                    <span>shakel is sum</span>
+                </div>
+
+                <div class="select-currency">
+                    <span>0.26</span>
+                    <span>dollars</span>
+                </div>
+
+                <div class="date-currency">
+                    <span>02/08/2024</span>
+                </div>
+
+                <div class="calculator">
+                    <div class="calculator-container">
+                        <select name="to-currency" placeholder="usd" aria-label="currency-type">
+                            <option value="usd">usd</option>
+                            <option value="ils">Ils</option>
+                        </select>
+                        <div class="input-border"></div>
+                        <input type="number">
+
+                    </div>
+
+                    <div class="calculator-container">
+
+                        <select name="to-currency" placeholder="usd" aria-label="currency-type">
+                            <option value="usd">usd</option>
+                            <option value="ils">Ils</option>
+                        </select>
+                        <div class="input-border"></div>
+                        <input type="number">
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+
+
+    <script src="lib/axios.js"></script>
+    <script src="lib/swal.js"></script>
+    <script src="js/service/util-service.js"></script>
+    <script src="js/service/storage-service.js"></script>
+    <script src="js/controllers.js"></script>
+</body>
+
+</html>
