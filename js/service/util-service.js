@@ -5,7 +5,8 @@ console.log('util-service ready');
 const utilService = {
     makeId,
     makeLorem,
-    getRandomIntInclusive
+    getRandomIntInclusive,
+    debounce
 }
 
 function makeId(length = 6) {
@@ -36,8 +37,6 @@ function getRandomIntInclusive(min, max) {
 }
 
 function debounce(func, wait) {
-    console.log('debouncedebouncedebouncedebounce');
-
     let timeout;
 
     return function executedFunction(...args) {

@@ -1,32 +1,115 @@
 'use strict'
 
 const gCurrency = loadFromStorage('currency') || {}
-let gCoinsAmount = 1
-const API_KEY = ''
-let gCurrencyType = 'ils'
 
-function updateCoinsAmount(coinsAmount) {
+const API_KEY = '4e4483bb1e61b841cf598fe5'
+
+const gUserSelected = {
+    inputNames: ['curr-currency', 'to-currency'],
+    selectedInputName: 'curr-currency',
+    currCurrency: {
+        amount: 1,
+        currencyType: 'EUR'
+    },
+    toCurrency: {
+        amount: 4.19,
+        currencyType: 'ILS'
+    }
+}
+
+// An object that contains all the exported functions
+
+const currencyService = {
+    updateCurrencyAmount,
+    getAllCurrencyType,
+    getCurrencyValue,
+    updateSelectedInputName,
+    updateCurrencyType,
+    getInputNames
+}
+
+// The function returns the names of the inputs
+
+function getInputNames() {
+    return gUserSelected.inputNames
+}
+
+// The function updates the model on which input the user is now
+
+function updateSelectedInputName(inputName) {
+    gUserSelected.selectedInputName = inputName
+    console.log('gUserSelected.selectedInputName', gUserSelected.selectedInputName);
+
+}
+
+//  The function sends a request to the server and receives
+//  the current currency value and
+//  then updates the global variables(gCurrency,gUserSelected)
+
+function convertCurrency(currCurrency, toCurrency, amount) {
+    console.log('currCurrency', currCurrency);
+    console.log('toCurrency', toCurrency);
+    console.log('amount', amount);
+    // example of object from the api
+    const prmData = {
+        "result": "success",
+        "documentation": "https://www.exchangerate-api.com/docs",
+        "terms_of_use": "https://www.exchangerate-api.com/terms",
+        "time_last_update_unix": 1722816001,
+        "time_last_update_utc": "Mon, 05 Aug 2024 00:00:01 +0000",
+        "time_next_update_unix": 1722902401,
+        "time_next_update_utc": "Tue, 06 Aug 2024 00:00:01 +0000",
+        "base_code": "EUR",
+        "target_code": "ILS",
+        "conversion_rate": 4.1431,
+        "conversion_result": 8.2862
+    }
+    // return
+    // const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/pair/${currCurrency}/${toCurrency}/${amount}`
+    // const prm = axios.get(url)
+    // const currencyConvert = prm.data
+    // console.log(currencyConvert)
+
+    // axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/pair/EUR/ILS/1`)
+    // return axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/
+    //                 pair/${currCurrency}/${toCurrency}/${amount}`)
+}
+
+
+// The function updates the model with 
+// the amount of coins according to the user's choice or 
+// according to the current value of the coin
+
+function updateCurrencyAmount(coinsAmount, inputName) {
     const currNum = parseInt(coinsAmount)
     if (currNum !== typeof "number" && isNaN(currNum) && !currNum) return
-    gCoinsAmount = currNum
+    if (inputName === 'curr-currency') {
+        gUserSelected.currCurrency.amount = currNum
+    } else {
+        gUserSelected.toCurrency.amount = currNum
+    }
 }
-function updateCurrencyType(currencyType) {
-    gCurrencyType = currencyType
-    console.log('service', gCurrencyType);
 
+// The function updates the model with
+// the type of currency the user has selected
+function updateCurrencyType(currencyType, selectName) {
+    if (selectName === 'curr-currency') {
+        gUserSelected.currCurrency.currencyType = currencyType
+    } else {
+        gUserSelected.toCurrency.currencyType = currencyType
+    }
 }
 
+// The function returns the
+//  updated model (gUserSelected) after the conversion
 function getCurrencyValue() {
-    const coinsAmount = gCoinsAmount
-    gCoinsAmount = 0
-    return { coinsAmount: coinsAmount * 4, gCurrencyType }
+    const currencyValue = { ...gUserSelected }
+    return currencyValue
 }
 
-// console.log(JSON.stringify(getCurrencys()));
-
-function getCurrencyType() {
+// get all names of currencies types
+function getAllCurrencyType() {
     // get-- "https://openexchangerates.org/api/currencies.json"
-    // get all names of currencies
     return {
         "AED": "United Arab Emirates Dirham",
         "AFN": "Afghan Afghani",
