@@ -1,13 +1,24 @@
 
 'use strict'
-console.log('util-service ready');
 
 const utilService = {
     makeId,
     makeLorem,
     getRandomIntInclusive,
-    debounce
+    debounce,
+    getCopyObjValue
 }
+
+// get object and return copy of the
+//  value whiteout pointer
+// obj example gUserSelected.currCurrency
+// idx 'currencyType'
+// return the value
+function getCopyObjValue(obj, idx) {
+    const shallowObj = { ...obj }
+    return shallowObj[idx]
+}
+
 
 function makeId(length = 6) {
     var txt = '';

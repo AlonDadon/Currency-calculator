@@ -8,48 +8,59 @@ const gUserSelected = {
     inputNames: ['curr-currency', 'to-currency'],
     selectedInputName: 'curr-currency',
     currCurrency: {
-        amount: 1,
+        amount: 0,
         currencyType: 'EUR'
     },
     toCurrency: {
-        amount: 4.19,
+        amount: 0,
         currencyType: 'ILS'
     }
 }
 
-// An object that contains all the exported functions
-
+// An object with all functions to export
 const currencyService = {
     updateCurrencyAmount,
     getAllCurrencyType,
     getCurrencyValue,
     updateSelectedInputName,
     updateCurrencyType,
-    getInputNames
+    getInputNames,
+    getUserSelectedInput,
+    getUserSelectedType
 }
 
 // The function returns the names of the inputs
+function getUserSelectedType() {
+    return {
+        currType: utilService.getCopyObjValue(gUserSelected.currCurrency, 'currencyType'),
+        toType: utilService.getCopyObjValue(gUserSelected.toCurrency, 'currencyType')
+    }
+}
 
 function getInputNames() {
     return gUserSelected.inputNames
+}
+function getUserSelectedInput() {
+    return gUserSelected.selectedInputName
 }
 
 // The function updates the model on which input the user is now
 
 function updateSelectedInputName(inputName) {
     gUserSelected.selectedInputName = inputName
-    console.log('gUserSelected.selectedInputName', gUserSelected.selectedInputName);
-
 }
 
 //  The function sends a request to the server and receives
 //  the current currency value and
 //  then updates the global variables(gCurrency,gUserSelected)
 
-function convertCurrency(currCurrency, toCurrency, amount) {
-    console.log('currCurrency', currCurrency);
-    console.log('toCurrency', toCurrency);
-    console.log('amount', amount);
+// todo update the function to work with promise**********************************
+function _convertCurrency(amount = '2', isCurrCurrency) {
+
+    // Checks from which currency to which currency should be converted
+    const currTypeCurrency = (isCurrCurrency) ? gUserSelected.currCurrency.currencyType : gUserSelected.toCurrency.currencyType
+    const toTypeCurrency = (isCurrCurrency) ? gUserSelected.toCurrency.currencyType : gUserSelected.currCurrency.currencyType
+
     // example of object from the api
     const prmData = {
         "result": "success",
@@ -64,11 +75,23 @@ function convertCurrency(currCurrency, toCurrency, amount) {
         "conversion_rate": 4.1431,
         "conversion_result": 8.2862
     }
-    // return
+    const ggCurrency = {
+        'ILS': {
+            'EUR': 0.24
+        },
+        'EUR': {
+            'ILS': 4.1431
+        },
+    }
+
+    // todo add function updateGCurrency(type,toType,conversion_rate)****************************************************************
+    if (prmData.result === 'success') {
+        const conversionRes1 = amount * ggCurrency[currTypeCurrency][toTypeCurrency]
+        return conversionRes1
+    }
     // const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/pair/${currCurrency}/${toCurrency}/${amount}`
     // const prm = axios.get(url)
     // const currencyConvert = prm.data
-    // console.log(currencyConvert)
 
     // axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/pair/EUR/ILS/1`)
     // return axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/
@@ -80,34 +103,88 @@ function convertCurrency(currCurrency, toCurrency, amount) {
 // the amount of coins according to the user's choice or 
 // according to the current value of the coin
 
-function updateCurrencyAmount(coinsAmount, inputName) {
-    const currNum = parseInt(coinsAmount)
-    if (currNum !== typeof "number" && isNaN(currNum) && !currNum) return
+// todo fix the argument of inputName to isCurrCurrency***********
+function updateCurrencyAmount(currencyAmount, inputName) {
+    const currNum = parseInt(currencyAmount)
+
+    if (currNum !== typeof "number" && isNaN(currNum) && !currNum) {
+        gUserSelected.currCurrency.amount = 0
+        gUserSelected.toCurrency.amount = 0
+        return
+    }
+
     if (inputName === 'curr-currency') {
+        // update the user selected//
         gUserSelected.currCurrency.amount = currNum
+        // (get)-Receives the currency amount after the conversion
+        const conversionRes = _convertCurrency(currencyAmount, true)
+        // Update the secondary input
+        gUserSelected.toCurrency.amount = conversionRes
     } else {
         gUserSelected.toCurrency.amount = currNum
+        const conversionRes = _convertCurrency(currencyAmount, false)
+        gUserSelected.currCurrency.amount = conversionRes
     }
 }
 
+
 // The function updates the model with
 // the type of currency the user has selected
+
+// todo fix the argument of inputName to isCurrCurrency***********
 function updateCurrencyType(currencyType, selectName) {
-    if (selectName === 'curr-currency') {
-        gUserSelected.currCurrency.currencyType = currencyType
+
+    const isCurrCurrency = (selectName === 'curr-currency') ? true : false
+
+    // If the user selects the same type in the second input, 
+    // then the function switches between the values ​​in the inputs
+    // example inputType1 ='ILS' and inputType2 ='EUR'   
+    // and now user selected inputType1'EUR'
+
+    if (isCurrCurrency && currencyType === gUserSelected.toCurrency.currencyType ||
+        !isCurrCurrency && currencyType === gUserSelected.currCurrency.currencyType
+    ) {
+        // save in side the type 
+        const currType = utilService.getCopyObjValue(gUserSelected.currCurrency, 'currencyType')
+        const toType = utilService.getCopyObjValue(gUserSelected.toCurrency, 'currencyType')
+        // save in side amount
+        const currAmount = utilService.getCopyObjValue(gUserSelected.currCurrency, 'amount')
+        const toAmount = utilService.getCopyObjValue(gUserSelected.toCurrency, 'amount')
+
+        if (isCurrCurrency) {
+            // update the type
+            gUserSelected.toCurrency.currencyType = currType
+            gUserSelected.currCurrency.currencyType = currencyType
+
+            // todo fix the argument of inputName to isCurrCurrency***********
+            // update the amount
+            updateCurrencyAmount(currAmount, 'to-currency')
+        } else {
+            gUserSelected.currCurrency.currencyType = toType
+            gUserSelected.toCurrency.currencyType = currencyType
+            updateCurrencyAmount(toAmount, 'curr-currency')
+        }
+
     } else {
-        gUserSelected.toCurrency.currencyType = currencyType
+
+        if (isCurrCurrency) {
+            gUserSelected.currCurrency.currencyType = currencyType
+        } else {
+            gUserSelected.toCurrency.currencyType = currencyType
+        }
     }
 }
 
 // The function returns the
 //  updated model (gUserSelected) after the conversion
+
 function getCurrencyValue() {
     const currencyValue = { ...gUserSelected }
     return currencyValue
 }
 
 // get all names of currencies types
+
 function getAllCurrencyType() {
     // get-- "https://openexchangerates.org/api/currencies.json"
     return {

@@ -1,5 +1,4 @@
 'use strict'
-console.log('storage-service ready');
 
 const storageService = {
     loadFromStorage,
