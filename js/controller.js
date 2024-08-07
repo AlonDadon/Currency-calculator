@@ -17,7 +17,6 @@ function onInit() {
 // function onChangeCurrencyValue(ev) {
 // onUpdateCurrencyType(ev)
 // renderInput()
-// console.log('change tyepeeee', ev);
 // }
 
 // The function receives the amount of coins 

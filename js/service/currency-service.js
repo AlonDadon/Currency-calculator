@@ -50,14 +50,65 @@ function updateSelectedInputName(inputName) {
     gUserSelected.selectedInputName = inputName
 }
 
+
+
+//  The function updates the currency value in the object in both directions
+//  example key EUR:4.20 and key ILS:0.24
+//  this way the data is saved in gCurrency 
+//  and this reduces the amount of request to api
+
+function updateGCurrency(prmData, currTypeCurrency, toTypeCurrency, amount) {
+    const newRate = prmData.conversion_rate
+    const lastUpdate = +prmData.time_last_update_unix
+
+    // Updates the key of the current currency
+    if (gCurrency[currTypeCurrency]) {
+
+        gCurrency[currTypeCurrency][toTypeCurrency] = {
+            conversionRate: newRate,
+            ['lastUpdate']: lastUpdate
+        }
+
+    } else {
+        // If the key does not exist, create it
+
+        gCurrency[currTypeCurrency] = {
+            [toTypeCurrency]: {
+                conversionRate: newRate,
+                ['lastUpdate']: lastUpdate
+            }
+        }
+
+    }
+
+    // Updates the key of the secondary currency
+    if (gCurrency[toTypeCurrency]) {
+
+        gCurrency[toTypeCurrency][currTypeCurrency] = {
+            conversionRate: amount / newRate,
+            ['lastUpdate']: lastUpdate
+        }
+
+    } else {
+
+        gCurrency[toTypeCurrency] = {
+            [currTypeCurrency]: {
+                conversionRate: amount / newRate,
+                ['lastUpdate']: lastUpdate
+            }
+        }
+    }
+
+}
+
 //  The function sends a request to the server and receives
 //  the current currency value and
-//  then updates the global variables(gCurrency,gUserSelected)
+//  then updates the gCurrency
 
-// todo update the function to work with promise**********************************
-function _convertCurrency(amount = '2', isCurrCurrency) {
+async function _convertCurrency(amount = '2', isCurrCurrency) {
 
     // Checks from which currency to which currency should be converted
+    // depending on the user's choice
     const currTypeCurrency = (isCurrCurrency) ? gUserSelected.currCurrency.currencyType : gUserSelected.toCurrency.currencyType
     const toTypeCurrency = (isCurrCurrency) ? gUserSelected.toCurrency.currencyType : gUserSelected.currCurrency.currencyType
 
@@ -75,20 +126,11 @@ function _convertCurrency(amount = '2', isCurrCurrency) {
         "conversion_rate": 4.1431,
         "conversion_result": 8.2862
     }
-    const ggCurrency = {
-        'ILS': {
-            'EUR': 0.24
-        },
-        'EUR': {
-            'ILS': 4.1431
-        },
-    }
 
-    // todo add function updateGCurrency(type,toType,conversion_rate)****************************************************************
-    if (prmData.result === 'success') {
-        const conversionRes1 = amount * ggCurrency[currTypeCurrency][toTypeCurrency]
-        return conversionRes1
-    }
+    return Promise.resolve(prmData)
+        .then((data) => updateGCurrency(data, currTypeCurrency, toTypeCurrency, amount))
+        .then(() => amount * gCurrency[currTypeCurrency][toTypeCurrency].conversionRate)
+
     // const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/pair/${currCurrency}/${toCurrency}/${amount}`
     // const prm = axios.get(url)
     // const currencyConvert = prm.data
@@ -104,7 +146,7 @@ function _convertCurrency(amount = '2', isCurrCurrency) {
 // according to the current value of the coin
 
 // todo fix the argument of inputName to isCurrCurrency***********
-function updateCurrencyAmount(currencyAmount, inputName) {
+async function updateCurrencyAmount(currencyAmount, inputName) {
     const currNum = parseInt(currencyAmount)
 
     if (currNum !== typeof "number" && isNaN(currNum) && !currNum) {
@@ -117,13 +159,14 @@ function updateCurrencyAmount(currencyAmount, inputName) {
         // update the user selected//
         gUserSelected.currCurrency.amount = currNum
         // (get)-Receives the currency amount after the conversion
-        const conversionRes = _convertCurrency(currencyAmount, true)
+
         // Update the secondary input
-        gUserSelected.toCurrency.amount = conversionRes
+        _convertCurrency(currencyAmount, true)
+            .then((conversionRes) => gUserSelected.toCurrency.amount = conversionRes)
     } else {
         gUserSelected.toCurrency.amount = currNum
-        const conversionRes = _convertCurrency(currencyAmount, false)
-        gUserSelected.currCurrency.amount = conversionRes
+        _convertCurrency(currencyAmount, false)
+            .then((conversionRes) => gUserSelected.currCurrency.amount = conversionRes)
     }
 }
 
