@@ -52,9 +52,11 @@ function renderWithDelay(t = 300) {
 }
 
 
-// selected input to focus
+// selected input to focus by user
 function onSelectedInputToFocus(inputNames, currCurrencyVal, toCurrencyValue) {
+
     const lastUserInputSelected = currencyService.getUserSelectedInput()
+
     inputNames.forEach((inputName, idx) => {
         let value = (idx === 0) ? currCurrencyVal : toCurrencyValue
         const elInput = document.querySelector(`input[name=${inputName}]`)

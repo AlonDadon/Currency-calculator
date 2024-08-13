@@ -1,6 +1,7 @@
 'use strict'
 
-const gCurrency = loadFromStorage('currency') || {}
+const gCurrency = storageService.loadFromStorage('currency') || {}
+console.log(gCurrency);
 
 const API_KEY = '4e4483bb1e61b841cf598fe5'
 
@@ -57,16 +58,20 @@ function updateSelectedInputName(inputName) {
 //  this way the data is saved in gCurrency 
 //  and this reduces the amount of request to api
 
-function updateGCurrency(prmData, currTypeCurrency, toTypeCurrency, amount) {
-    const newRate = prmData.conversion_rate
-    const lastUpdate = +prmData.time_last_update_unix
+function updateGCurrency(conversionRate, currTypeCurrency, toTypeCurrency, amount, lastUpdate) {
+    const newRate = conversionRate
 
+    const lastUpdateUtc = dateService.getFormattedDate(lastUpdate)
     // Updates the key of the current currency
     if (gCurrency[currTypeCurrency]) {
 
         gCurrency[currTypeCurrency][toTypeCurrency] = {
             conversionRate: newRate,
-            ['lastUpdate']: lastUpdate
+            // ['lastUpdate']: lastUpdate,
+            // 'lastUpdate': lastUpdate,
+            lastUpdate,
+            // lastUpdate: Date.now(),
+            lastUpdateUtc
         }
 
     } else {
@@ -75,7 +80,11 @@ function updateGCurrency(prmData, currTypeCurrency, toTypeCurrency, amount) {
         gCurrency[currTypeCurrency] = {
             [toTypeCurrency]: {
                 conversionRate: newRate,
-                ['lastUpdate']: lastUpdate
+                // ['lastUpdate']: lastUpdate,
+                // lastUpdate: Date.now(),
+                // 'lastUpdate': lastUpdate,
+                lastUpdate,
+                lastUpdateUtc
             }
         }
 
@@ -86,7 +95,11 @@ function updateGCurrency(prmData, currTypeCurrency, toTypeCurrency, amount) {
 
         gCurrency[toTypeCurrency][currTypeCurrency] = {
             conversionRate: amount / newRate,
-            ['lastUpdate']: lastUpdate
+            // ['lastUpdate']: lastUpdate,
+            // lastUpdate: Date.now(),
+            // 'lastUpdate': lastUpdate,
+            lastUpdate,
+            lastUpdateUtc,
         }
 
     } else {
@@ -94,11 +107,17 @@ function updateGCurrency(prmData, currTypeCurrency, toTypeCurrency, amount) {
         gCurrency[toTypeCurrency] = {
             [currTypeCurrency]: {
                 conversionRate: amount / newRate,
-                ['lastUpdate']: lastUpdate
+                // ['lastUpdate']: lastUpdate,
+                // lastUpdate: Date.now(),
+                // 'lastUpdate': lastUpdate,
+                lastUpdate,
+                lastUpdateUtc,
             }
         }
     }
+    console.log(gCurrency)
 
+    storageService.saveToStorage('currency', gCurrency)
 }
 
 //  The function sends a request to the server and receives
@@ -112,34 +131,81 @@ async function _convertCurrency(amount = '2', isCurrCurrency) {
     const currTypeCurrency = (isCurrCurrency) ? gUserSelected.currCurrency.currencyType : gUserSelected.toCurrency.currencyType
     const toTypeCurrency = (isCurrCurrency) ? gUserSelected.toCurrency.currencyType : gUserSelected.currCurrency.currencyType
 
-    // example of object from the api
-    const prmData = {
-        "result": "success",
-        "documentation": "https://www.exchangerate-api.com/docs",
-        "terms_of_use": "https://www.exchangerate-api.com/terms",
-        "time_last_update_unix": 1722816001,
-        "time_last_update_utc": "Mon, 05 Aug 2024 00:00:01 +0000",
-        "time_next_update_unix": 1722902401,
-        "time_next_update_utc": "Tue, 06 Aug 2024 00:00:01 +0000",
-        "base_code": "EUR",
-        "target_code": "ILS",
-        "conversion_rate": 4.1431,
-        "conversion_result": 8.2862
+    // url for get request(axios)
+    // const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/pair/${currTypeCurrency}/${toTypeCurrency}/${amount}`
+    const url = `https://v6.exchangerate-api.com/pair/${currTypeCurrency}/${toTypeCurrency}/${amount}`
+
+
+    // check if currency exists in gCurrency
+    if (gCurrency[currTypeCurrency] && gCurrency[toTypeCurrency]) {
+
+        const lastUpdateToCheck = gCurrency[currTypeCurrency][toTypeCurrency].lastUpdate
+        // checks if a month has passed since we send a request from server(api)
+        if (dateService.isFromLastMonth(lastUpdateToCheck)) {
+
+            // get from gCurrency(localStorage)
+            return Promise.resolve()
+
+                .then(() => {
+                    return {
+                        conversionRate: gCurrency[currTypeCurrency][toTypeCurrency].conversionRate,
+                        lastUpdate: gCurrency[currTypeCurrency][toTypeCurrency].lastUpdate
+                    }
+                })
+
+                .then((data) => updateGCurrency(data.conversionRate, currTypeCurrency, toTypeCurrency, amount, data.lastUpdate))
+
+                .then(() => amount * gCurrency[currTypeCurrency][toTypeCurrency].conversionRate)
+        } else {
+
+            // get from ajax
+            return axios.get(url)
+
+                .then((prmData) => {
+                    console.log(prmData);
+                    return prmData.data
+                })
+
+                .then(() => {
+                    return {
+                        conversionRate: prmData.conversion_rate,
+                        lastUpdate: prmData.time_last_update_unix * 1000
+                    }
+                })
+
+                .then((data) => updateGCurrency(data.conversionRate, currTypeCurrency, toTypeCurrency, amount, data.lastUpdate))
+
+                .then(() => amount * gCurrency[currTypeCurrency][toTypeCurrency].conversionRate)
+
+                .catch((err) => (console.log('The server is down right now, please try again later')))
+        }
+    }
+    else {
+
+        // if the currency does not exists in gCurrency
+        return axios.get(url)
+
+            .then((prmData) => {
+                console.log(prmData);
+                return prmData.data
+            })
+
+            .then((prmData) => {
+                return {
+                    conversionRate: prmData.conversion_rate,
+                    lastUpdate: prmData.time_last_update_unix * 1000
+                }
+            })
+
+            .then((data) => updateGCurrency(data.conversionRate, currTypeCurrency,
+                toTypeCurrency, amount, data.lastUpdate))
+
+            .then(() => amount * gCurrency[currTypeCurrency][toTypeCurrency].conversionRate)
+
+            .catch((err) => (console.log('The server is down right now, please try again later')))
     }
 
-    return Promise.resolve(prmData)
-        .then((data) => updateGCurrency(data, currTypeCurrency, toTypeCurrency, amount))
-        .then(() => amount * gCurrency[currTypeCurrency][toTypeCurrency].conversionRate)
-
-    // const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/pair/${currCurrency}/${toCurrency}/${amount}`
-    // const prm = axios.get(url)
-    // const currencyConvert = prm.data
-
-    // axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/pair/EUR/ILS/1`)
-    // return axios.get(`https://v6.exchangerate-api.com/v6/${API_KEY}/
-    //                 pair/${currCurrency}/${toCurrency}/${amount}`)
 }
-
 
 // The function updates the model with 
 // the amount of coins according to the user's choice or 
